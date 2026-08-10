@@ -1,6 +1,6 @@
 <template>
   <div class="parent">
-  <Form  @prediction='handlePrediction' @loading='handleLoading'/>
+  <Form  @prediction='handlePrediction' @loading='handleLoading' @close='removeBox'/>
   <predictionBox :predicted_value = "prediction" :boxStatus="showPredictionbox" :loading='isloading'/>
   </div>
 </template>
@@ -23,9 +23,8 @@ export default{
   components: {Form, predictionBox},
   methods: {
     
-    handlePrediction(result){
-      
-      
+    handlePrediction(pred){
+
       const elapsed = Date.now() - this.loadingStartTime 
       const RandomMinimum = Math.random() * 1000 + 1000
 
@@ -33,7 +32,7 @@ export default{
 
       setTimeout(() => {
         this.isloading = false, 
-        this.prediction = result
+        this.prediction = pred
       },remaining)
     },
     handleLoading(status){
@@ -42,6 +41,9 @@ export default{
         this.showPredictionbox = true
         this.isloading = true
       }
+    },
+    removeBox(){
+      this.showPredictionbox = false
     }
     
   }

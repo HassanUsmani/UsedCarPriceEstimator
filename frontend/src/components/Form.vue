@@ -1,6 +1,9 @@
 <template>
-    <form @submit.prevent='Predict()' v-if="showForm">
-        <div class="maindiv">
+    <form @submit.prevent='Predict()'>
+        <div class="overlay" v-if="submitted" @click="Rebring()">
+
+        </div>
+        <div class="maindiv" :class="{disable : submitted === true}">
             <h2>Used Car Value Estimator</h2>
             <label>Brand</label>
             <div @click="dropBrand()" class='dropdown-box' :class="{active : dropDownbrand == true}">
@@ -8,11 +11,7 @@
                     <input type="text" readonly :value="selectedBrand">
                 </div>
                 <div class="dropdown">
-                    <div class="search-input">
-                        <input type="text">
-                    </div>
                     <ul >
-                        <li class="dropdown-item active">Select</li>
                         <li v-for="Brand in brands" :key="Brand" class="dropdown-item" value="Toyota" @click="selectBrand($event,Brand)">{{Brand}}</li>
                     </ul>
                 </div>
@@ -42,21 +41,11 @@
                         <li @click="selectEngine(e, Engine)" v-for="Engine in engine_array" :key ="Engine" class="dropdown-iem">{{Engine}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="engineLoaded">please select the above credentials</li>
+                        <li class="not-selected" v-if="engineLoaded">please enter the above detais first.</li>
                     </ul>
                 </div>
                 
             </div>
-            
-        
-            <label for="">km_driven</label>    
-            <input type="text" v-model="km_driven" >
-
-            <label for="">vehicle_age</label>    
-            <input type="text" v-model="vehicle_age" >
-
-            <label for="">mileage</label>    
-            <input type="text" v-model="mileage" >
             
             <label for="">Fuel Type</label>
             <div @click="dropFuel()" class="dropdown-box" :class ="{active: dropDownFuel == true}">
@@ -68,10 +57,22 @@
                         <li @click="selectFuel(e, Fuel)" v-for="Fuel in fuels" :key="Fuel" class="dropdown-item ">{{Fuel}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="fuelLoaded">please select the above credentials</li>
+                        <li class="not-selected" v-if="fuelLoaded">please enter the above detais first.</li>
                     </ul>
                 </div>
             </div>
+
+            <label for="">km_driven</label>    
+            <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent'>
+
+            <label for="">vehicle_age</label>    
+            <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent'>
+
+            <label for="">mileage</label>    
+            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage">
+            <p v-if="checkMileageflagEmpty" style="color:red;">please enter the above details first.</p>
+            <p v-if="checkMileageflag" style="color:#D97706;">The mileage is unusual for this type of vehicle</p>
+
             <label for="">Transmission Type</label>
             <div @click="dropTransmission()" class="dropdown-box" :class ="{active: dropDownTransmission == true}">
                 <div class="selected-item"> 
@@ -82,16 +83,14 @@
                         <li @click="selectTransmission(e, trans)" v-for="trans in transmission" :key="trans" class="dropdown-item ">{{trans}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="transLoaded">please select the above credentials</li>
+                        <li class="not-selected" v-if="transLoaded">please enter the above detais first.</li>
                     </ul>
                 </div>
             </div>
 
             <button class="submit" type="submit">Predict</button>
-
        </div>
     </form>
-
 </template>
 
 <script>
@@ -104,12 +103,14 @@ export default {
             dropDownFuel:false,
             dropDownTransmission:false,
             predicted:false,
-            showForm:true,
+            submitted:false,
 
             engineLoaded : true,
             modelLoaded : true,
             fuelLoaded : true,
             transLoaded : true,
+            checkMileageflag : false,
+            checkMileageflagEmpty : false,
 
             selectedBrand : 'Select',
             selectedModel : 'Select',
@@ -122,40 +123,37 @@ export default {
             fuel_type : '',
             transmission_type : '',
             engine : '',
-            km_driven : 0,
-            mileage : 0,
-            vehicle_age : 0,
+            km_driven : '',
+            mileage : '',
+            vehicle_age : '',
 
-            brands : ["Toyota","Renault","Ford","Volkswagen","BMW","Volvo","Maruti","Skoda","Jaguar","Mahindra","Datsun",
+            brands : ["Toyota","Renault","Ford","Volkswagen","BMW","Maruti","Skoda","Jaguar","Mahindra","Datsun",
                 "Mercedes-Benz","Honda","Porsche","Hyundai","Audi","Jeep","Tata"],
 
 
             models : {
-                "Toyota":['Innova','Fortuner','Camry','Yaris'],
+                "Toyota":['Innova','Fortuner','Camry'],
                 "Renault":['Duster','KWID'],
                 "Ford":['Ecosport','Aspire','Figo','Endeavour','Freestyle'],
                 "Volkswagen":['Vento','Polo'],
-                "BMW":['5','3','X5','X1','7'],
-                "Volvo":['not considering'],  // 'S90','XC','XC90','XC60'
+                "BMW":['5','3','X5','X1','7','X3'],
                 "Maruti":['Alto','Wagon R','Swift','Ciaz','Baleno','Swift Dzire','Ignis','Vitara','Celerio',
-                    'Ertiga','Eeco','Dzire VXI','XL6','S-Presso','Dzire LXI','Dzire ZXI'],
+                    'Ertiga','Eeco'],
                 "Skoda":['Rapid','Superb','Octavia'],
-                "Jaguar":['XF','F-PACE','XE'],
-                "Mahindra":['Bolero','XUV500','KUV100','Scorpio','Marazzo','KUV','Thar','XUV300','Alturas'],
-                "Datsun":['RediGo','GO','redi-GO'], // Not Confirmed whether to add or not
-                "Mercedes-Benz":['C-Class','E-Class','GL-Class','S-Class','CLS','GLS'],
-                "Honda":['City','Amaze','CR-V','Jazz','Civic','WR-V','CR'],
-                "Porsche":['Cayenne','Maccan','Panamera'],
-                "Hyundai":['Grand','Verna','i20','Creta','Santro','Venue','Elantra','Tucson'],
+                "Jaguar":['XF'],
+                "Mahindra":['Bolero','XUV500','KUV100','Scorpio','Marazzo','KUV','Thar'],
+                "Datsun":['GO'],
+                "Mercedes-Benz":['C-Class','E-Class','GL-Class','S-Class'],
+                "Honda":['City','Amaze','CR-V','Jazz','Civic','WR-V'],
+                "Hyundai":['Grand','Verna','i20','Santro','Venue','Elantra','Creta','i10'],
                 "Audi":['A4','A6','Q7'],
-                "Jeep":["not considering"],
-                "Tata":['Tiago','Safari','Nexon','Hexa','Tigor']
+                "Jeep":["Compass"],
+                "Tata":['Tiago','Safari','Nexon','Hexa','Tigor','Harrier']
             },
             fuels : [],
             transmission : [],
             engine_array :[]
         }
-        
     },
     
     methods :{ 
@@ -187,10 +185,9 @@ export default {
                 }).then(result => {console.log(result),this.sendPrediction(result)})
                   .catch(err => {console.log(err.message)})
                 this.loading(false)
-                  
+                this.submitted = true
             }else{
-
-                console.log('else-block')
+                alert('Enter all the required information')
             }
         },
         dropBrand(){
@@ -202,6 +199,8 @@ export default {
                 this.dropDownengine = false
                 this.dropDownFuel = false
                 this.dropDownTransmission = false
+                this.checkMileageflag = false
+                this.checkMileageflagEmpty = false
             }
         },
         dropModel(){
@@ -216,21 +215,15 @@ export default {
                 this.dropDownengine = false
                 this.dropDownFuel = false
                 this.dropDownTransmission = false
+                this.checkMileageflag = false
+                this.checkMileageflagEmpty = false
             }
         },
-        dropEngine(){
+        async dropEngine(){
             if(this.dropDownengine){
                 this.dropDownengine = false
             }else{
-                this.dropDownengine = true 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false 
-                this.dropDownFuel = false 
-                this.dropDownTransmission = false
-            }
-            if(this.dropDownengine){
-                
-                fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`,{
+                await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`,{
                     method : "GET"
                 }).then(response => {
                     if(!response.ok){
@@ -241,21 +234,21 @@ export default {
                     
                 }).then(result => {this.engine_array = result, console.log(result)})
                   .catch(err => {console.log(err.message), this.engineLoaded = true})
-                  
+                this.dropDownengine = true 
+                this.dropDownbrand = false 
+                this.dropDownmodel = false 
+                this.dropDownFuel = false 
+                this.dropDownTransmission = false
+                this.checkMileageflag = false
+                this.checkMileageflagEmpty = false
             }
+
         },
-        dropFuel(){
+        async dropFuel(){
             if(this.dropDownFuel){
                 this.dropDownFuel = false
             }else{
-                this.dropDownFuel = true 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false 
-                this.dropDownengine = false
-                this.dropDownTransmission = false
-            }
-            if(this.dropDownFuel){
-                fetch(`http://localhost:8000/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
+                await fetch(`http://localhost:8000/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
                     method : "GET"
                 }).then(response => {
                     if(!response.ok){
@@ -265,20 +258,20 @@ export default {
                     return response.json()
                 }).then(result => this.fuels = result)
                   .catch(err => {console.log(err.message), this.fuelLoaded = true})
+                this.dropDownFuel = true 
+                this.dropDownbrand = false 
+                this.dropDownmodel = false 
+                this.dropDownengine = false
+                this.dropDownTransmission = false
+                this.checkMileageflag = false
+                this.checkMileageflagEmpty = false
             }
         },
-        dropTransmission(){
+        async dropTransmission(){
             if(this.dropDownTransmission){
                 this.dropDownTransmission = false
             }else{
-                this.dropDownTransmission = true 
-                this.dropDownFuel = false 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false
-                this.dropDownengine = false 
-            }
-            if(this.dropDownTransmission){
-                fetch(`http://localhost:8000/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
+                await fetch(`http://localhost:8000/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
                     method : "GET",
                    
                 }).then(response => {
@@ -290,6 +283,38 @@ export default {
                 })
                   .then(result => this.transmission = result)
                   .catch(err => {console.log(err.message),this.transLoaded=true})
+                this.dropDownTransmission = true 
+                this.dropDownFuel = false 
+                this.dropDownbrand = false 
+                this.dropDownmodel = false
+                this.dropDownengine = false 
+            }
+        },
+        async checkMileage(){
+            this.checkMileageflag = false
+            if(this.engine && this.fuel_type){
+                try {
+                    const response = await fetch(
+                        `http://localhost:8000/mileage/${encodeURIComponent(this.engine)}`
+                    )
+                    if(!response.ok){
+                        throw new Error("Request Failed")
+                    }
+                    const res = await response.json()
+                    if(this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
+                        this.checkMileageflag = true
+                        console.log(Math.round(res.max + 2))
+                        console.log(Math.round(res.min - 2))
+                        console.log(res)
+                        console.log(this.mileage)
+                    }
+                }
+                catch (err){
+                    console.log(err.message)
+                }
+            }
+            else{
+                this.checkMileageflagEmpty = true
             }
         },
         selectBrand(e, brand){
@@ -342,15 +367,29 @@ export default {
             this.selectedTransmission = 'Select'          
             this.fuel_type = ''
             this.transmission_type = ''
+            this.km_driven = ''
+            this.mileage = ''
+            this.vehicle_age = ''
+            this.checkMileagemsg = ''
         },
-        sendPrediction(res){
-            this.$emit('prediction', res)
+        sendPrediction(pred){
+            this.$emit('prediction', pred)
         },
-        // showPredictionbox(){
-        //     this.$emit('close')
-        // },
         loading(status){
             this.$emit('loading',status)
+        },
+        Rebring(){
+            if(this.submitted){
+                this.submitted = false 
+                this.$emit('close')
+                console.log('inside-if')
+            }
+            console.log('outside-if')
+        },
+        preventExponent(event){
+            if (event.key == 'e' | event.key == 'E'){
+                event.preventDefault()
+            }
         }
     }
 }
@@ -365,6 +404,11 @@ input{
     border-radius: 5px;
     outline: none;
 }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 label{
     width: 400px;
     background-color: aquamarine;
@@ -374,43 +418,48 @@ label{
     display: inline-block;
     font-size: 20px;
     font-weight: 200;
-
 }
 .maindiv h2{
     /* background-color: cornsilk; */
     padding: 15px 2px;
 }
-/* .maindiv label{
-    display: inline-block;
-} */
 .maindiv .dropdown-box{
-    align-items: center;
-    
+    align-items: center;   
 }
 
 .maindiv button{
-    background-color: aqua;
+    background-color: rgba(93, 174, 142, 0.768);
+    font-size: 16px;
+    font-weight: bold;
     width: 100px;
     height: 40px;
     border-radius: 8px;
     margin: 5px;
+    box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.247);
 }
 .maindiv button:hover{
     cursor: pointer;
 }
 form{
-    /* background: mediumslateblue;  */
-    /* border-color: blue; */
     width: 500px;
-    height: 700px;
-    /* border-color: rgb(143, 161, 62);
-    border-width: 10px; */
+    height: 740px;
     background-color: rgba(136, 218, 218, 0.934);
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 7px;
-    /* text-align: center; */
+    position: relative;
+
+}
+.disable {
+    cursor: default;
+    opacity: 0.3;
+}
+.overlay{
+    z-index: 1;
+    position: absolute;
+    inset: 0;
+    background-color: transparent;
 }
 .dropdown-box label{
     text-align: left;
@@ -422,14 +471,10 @@ form{
     margin: 0;
     padding: 0;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* width: 100%; */
-    /* padding-left: 10px;
-    padding-right: 10px;    */
 }
-.dropdown-box .selected-item{
-    /* border: 1px solid rgb(160, 158, 158); */
+/* .dropdown-box .selected-item{
     width: 100%;
-}
+} */
 
 .dropdown-box input{
     width: 80%; 
@@ -454,15 +499,12 @@ form{
     top: 50%;
     right: 12%;
     transform: translateY(-70%) rotate(45deg);
-    
 }
 .dropdown-box{
     width: 100%;
-    /* margin-right: 200px; */
-    /* background-color: blueviolet; */
     position: relative;
     align-items: center;
-    /* justify-self: center; */
+
 }
 .dropdown-box .selected-item, .dropdown-box .selected-item input{
     cursor: pointer;
@@ -479,13 +521,11 @@ form{
     background-color: rgb(231, 229, 229);
     width: 400px;
     justify-self: center;
-    /* justify-self: center; */
 }
 .dropdown-box.active .dropdown{
     display:block;
 }
 .dropdown-box .dropdown ul{
-    /* justify-content: left; */
     list-style: none;
     align-items: center;
 }
@@ -495,22 +535,18 @@ form{
     
 }
 .dropdown-box .dropdown ul li{
-    /* justify-self: left; */
     padding: 2px 5px;
     cursor: pointer;
-    /* width: 100%; */
 }
 .dropdown-box .dropdown ul li:hover{
-    color: blue;
-    background-color: rgba(196, 196, 196, 0.407);
+    color: rgb(107, 107, 255);
+    background-color: rgba(209, 209, 209, 0.407);
 }
 .dropdown-box .dropdown ul li.active{
     background-color: rgb(160, 200, 200);
     color: purple;
-    
 }
 .selectDropdown select{
-    /* background-color: darkblue; */
     width: 400px;
     display: inline-block;
     height: 30px;
