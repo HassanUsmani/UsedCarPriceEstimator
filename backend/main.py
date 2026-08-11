@@ -27,6 +27,7 @@ grouped = (
 )
 print(grouped.index)
 print(grouped)
+print(df['fuel_type'].value_counts())
 app = FastAPI()
 
 model = pickle.load(open('./model/model.pkl','rb'))
@@ -106,3 +107,8 @@ def mileage_range(engine: int):
         max = grouped.loc["3000+","min"]
     return {"min":min, "max":max}
             
+@app.get('/vehicle_age/{brandname}/{modelname}')
+def veh_age_range(brandname : str, modelname : str):
+    related_data = df.loc[(df['brand'] == brandname) & (df['model'] == modelname)]
+    start_year = related_data['model_start_year'].unique().tolist()[0]
+    return start_year
