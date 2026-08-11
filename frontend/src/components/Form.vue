@@ -41,7 +41,7 @@
                         <li @click="selectEngine(e, Engine)" v-for="Engine in engine_array" :key ="Engine" class="dropdown-iem">{{Engine}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="engineLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="engineLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
                 
@@ -57,7 +57,7 @@
                         <li @click="selectFuel(e, Fuel)" v-for="Fuel in fuels" :key="Fuel" class="dropdown-item ">{{Fuel}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="fuelLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="fuelLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                         <li @click="selectTransmission(e, trans)" v-for="trans in transmission" :key="trans" class="dropdown-item ">{{trans}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="transLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="transLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
             </div>
@@ -122,12 +122,6 @@ export default {
             km_drivenflag : false,
             invalidAgeflag:false,
             km_drivemsg : '',
-
-            selectedBrand : 'Select',
-            selectedModel : 'Select',
-            selectedEngine : 'Select',
-            selectedFuel : 'Select',
-            selectedTransmission : 'Select',
             
             model : '',
             brand : '',
@@ -256,6 +250,7 @@ export default {
                 this.checkMileageflagEmpty = false
                 this.km_drivenwarnflag = false
                 this.km_drivenrejflag = false
+                
             }
 
         },
@@ -458,7 +453,6 @@ export default {
     font-size: 13px;
 }
 input{
-    justify-content: left;
     width: 80%;
     padding: 5px;
     border-radius: 5px;
@@ -480,11 +474,7 @@ label{
     font-weight: 200;
 }
 .maindiv h2{
-    /* background-color: cornsilk; */
     padding: 15px 2px;
-}
-.maindiv .dropdown-box{
-    align-items: center;   
 }
 
 .maindiv button{
@@ -521,40 +511,26 @@ form{
     inset: 0;
     background-color: transparent;
 }
-.dropdown-box label{
-    text-align: left;
-    background-color: azure;
-}
-
 *{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-/* .dropdown-box .selected-item{
-    width: 100%;
-} */
-
 .dropdown-box input{
-    width: 80%; 
     border :1px solid rgb(160, 200, 200);
-    padding-left: 0px;
-    padding-right: 0px;
-    outline: none;
-    border-radius: 5px;
-    padding: 5px;
     color: rgb(119, 101, 22);
 }
 .dropdown-box .selected-item{
     position: relative;
 }
-.dropdown-box .selected-item::after{ /**after pseudo class */
+.dropdown-box .selected-item::after{
     content: '';
     width: 3px;
     height: 3px;
-    border: 2px solid rgb(200,182,100);
     border-color: transparent green green transparent;
+    border-style: solid;
+    border-width: 2px;
     position: absolute;
     top: 50%;
     right: 12%;
@@ -563,7 +539,6 @@ form{
 .dropdown-box{
     width: 100%;
     position: relative;
-    align-items: center;
 
 }
 .dropdown-box .selected-item, .dropdown-box .selected-item input{
@@ -571,7 +546,7 @@ form{
 }
 .dropdown-box .dropdown{
     box-shadow: 0 5px 15px rgb(0, 0,0, 15%);
-    border-radius:  5px;
+    border-radius: 5px;
     max-height: 100px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -579,39 +554,23 @@ form{
     position: absolute;
     z-index: 99;
     background-color: rgb(231, 229, 229);
-    width: 400px;
-    justify-self: center;
+    width: 80%;
+    left: 10%;
 }
 .dropdown-box.active .dropdown{
     display:block;
 }
 .dropdown-box .dropdown ul{
     list-style: none;
-    align-items: center;
-}
-.dropdown-box .dropdown .search-input{
-    margin: 7px 5px 0px 5px;
-    padding-top: 7px;
-    
 }
 .dropdown-box .dropdown ul li{
     padding: 2px 5px;
     cursor: pointer;
+    overflow-wrap: break-word;
 }
 .dropdown-box .dropdown ul li:hover{
     color: rgb(107, 107, 255);
     background-color: rgba(209, 209, 209, 0.407);
-}
-.dropdown-box .dropdown ul li.active{
-    background-color: rgb(160, 200, 200);
-    color: purple;
-}
-.selectDropdown select{
-    width: 400px;
-    display: inline-block;
-    height: 30px;
-    outline: none;
-    
 }
 .dropdown-box .dropdown .not-selected:hover{
     cursor:default;
@@ -622,6 +581,28 @@ form{
     color: red;
     font-size: 14px;
     font-weight: 100;
-    /* padding-top: 5px; */
+}
+
+@media (max-width: 480px) {
+    label {
+        font-size: 18px;
+    }
+    .maindiv button {
+        width: 90px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+@media (max-width: 300px) {
+    label,
+    input,
+    .dropdown-box .selected-item input,
+    .dropdown-box .dropdown {
+        width: 90%;
+    }
+
+    .dropdown-box .dropdown {
+        left: 5%;
+    }
 }
 </style>
