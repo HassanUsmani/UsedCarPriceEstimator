@@ -8,7 +8,7 @@
             <label>Brand</label>
             <div @click="dropBrand()" class='dropdown-box' :class="{active : dropDownbrand == true}">
                 <div class="selected-item">
-                    <input type="text" readonly :value="selectedBrand">
+                    <input type="text" readonly :value="brand" placeholder="Select">
                 </div>
                 <div class="dropdown">
                     <ul >
@@ -19,7 +19,7 @@
             <label>Model</label>
             <div @click="dropModel()" class='dropdown-box' :class="{active : dropDownmodel == true}">
                 <div class="selected-item">
-                    <input type="text" readonly :value="selectedModel">
+                    <input type="text" readonly :value="model" placeholder="Select">
                 </div>
                 <div class="dropdown">
                     <ul >
@@ -34,7 +34,7 @@
             <label for="">Engine</label>
             <div @click="dropEngine()" class="dropdown-box" :class="{active : dropDownengine == true}">
                 <div class="selected-item">
-                    <input type="text" readonly :value='selectedEngine'>
+                    <input type="text" readonly :value='engine' placeholder="Select">
                 </div>
                 <div class="dropdown">
                     <ul>
@@ -50,7 +50,7 @@
             <label for="">Fuel Type</label>
             <div @click="dropFuel()" class="dropdown-box" :class ="{active: dropDownFuel == true}">
                 <div class="selected-item"> 
-                    <input type="text" :value="selectedFuel" readonly>
+                    <input type="text" :value="fuel_type" placeholder="Select" readonly>
                 </div> 
                 <div class="dropdown">
                     <ul>
@@ -62,21 +62,25 @@
                 </div>
             </div>
 
-            <label for="">km_driven</label>    
-            <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent'>
-
             <label for="">vehicle_age</label>    
-            <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent'>
+            <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent' @blur="checkVehicle_age" placeholder="Ex: 9">
+            <p v-if="invalidAgeflag" class="error-message">The entered vehicle age is not valid for the selected model. Please check your input.</p>
+
+            <label for="">km_driven</label>    
+            <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent' placeholder="Ex: 50000" @blur="checkKm_driven">
+            <p v-if="km_drivenwarnflag" class="warning-message">{{km_drivemsg}}</p>
+            <p v-if="km_drivenrejflag" class="error-message">Too high for the vehicle's age.</p>
+
 
             <label for="">mileage</label>    
-            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage">
-            <p v-if="checkMileageflagEmpty" style="color:red;">please enter the above details first.</p>
-            <p v-if="checkMileageflag" style="color:#D97706;">The mileage is unusual for this type of vehicle</p>
+            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage" placeholder="Ex: 12.6">
+            <p v-if="checkMileageflagEmpty" class="error-message">please enter the above details first.</p>
+            <p v-if="checkMileageflag" class="warning-message">The mileage is unusual for this type of vehicle</p>
 
             <label for="">Transmission Type</label>
             <div @click="dropTransmission()" class="dropdown-box" :class ="{active: dropDownTransmission == true}">
                 <div class="selected-item"> 
-                    <input type="text" :value="selectedTransmission" readonly>
+                    <input type="text" :value="transmission_type" placeholder="Select" readonly>
                 </div> 
                 <div class="dropdown">
                     <ul>
@@ -104,20 +108,27 @@ export default {
             dropDownTransmission:false,
             predicted:false,
             submitted:false,
+            
 
             engineLoaded : true,
             modelLoaded : true,
             fuelLoaded : true,
             transLoaded : true,
+            km_drivenrejflag : false,
+            km_drivenwarnflag : false,
+
             checkMileageflag : false,
             checkMileageflagEmpty : false,
+            km_drivenflag : false,
+            invalidAgeflag:false,
+            km_drivemsg : '',
 
             selectedBrand : 'Select',
             selectedModel : 'Select',
             selectedEngine : 'Select',
             selectedFuel : 'Select',
             selectedTransmission : 'Select',
-
+            
             model : '',
             brand : '',
             fuel_type : '',
@@ -171,7 +182,6 @@ export default {
                     transmission_type : this.transmission_type,
                     engine : this.engine
                 }
-                console.log('if-block')
                 fetch('http://localhost:8000/post' ,{
                     method : "POST",
                     headers : {
@@ -201,6 +211,7 @@ export default {
                 this.dropDownTransmission = false
                 this.checkMileageflag = false
                 this.checkMileageflagEmpty = false
+                this.km_drivenflag = false
             }
         },
         dropModel(){
@@ -217,6 +228,8 @@ export default {
                 this.dropDownTransmission = false
                 this.checkMileageflag = false
                 this.checkMileageflagEmpty = false
+                this.km_drivenwarnflag = false
+                this.km_drivenrejflag = false
             }
         },
         async dropEngine(){
@@ -241,6 +254,8 @@ export default {
                 this.dropDownTransmission = false
                 this.checkMileageflag = false
                 this.checkMileageflagEmpty = false
+                this.km_drivenwarnflag = false
+                this.km_drivenrejflag = false
             }
 
         },
@@ -265,6 +280,9 @@ export default {
                 this.dropDownTransmission = false
                 this.checkMileageflag = false
                 this.checkMileageflagEmpty = false
+                this.km_drivenflag = false
+                this.km_drivenwarnflag = false
+                this.km_drivenrejflag = false
             }
         },
         async dropTransmission(){
@@ -292,7 +310,7 @@ export default {
         },
         async checkMileage(){
             this.checkMileageflag = false
-            if(this.engine && this.fuel_type){
+            if(this.engine && this.fuel_type && this.mileage){
                 try {
                     const response = await fetch(
                         `http://localhost:8000/mileage/${encodeURIComponent(this.engine)}`
@@ -303,74 +321,111 @@ export default {
                     const res = await response.json()
                     if(this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
                         this.checkMileageflag = true
-                        console.log(Math.round(res.max + 2))
-                        console.log(Math.round(res.min - 2))
-                        console.log(res)
-                        console.log(this.mileage)
                     }
                 }
                 catch (err){
                     console.log(err.message)
                 }
             }
-            else{
+            else if (!(this.engine && this.fuel_type)){
                 this.checkMileageflagEmpty = true
             }
         },
+        async checkVehicle_age(){
+            this.invalidAgeflag = false
+            if(this.brand && this.model){
+                try {
+                const response = await fetch(`http://localhost:8000/vehicle_age/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+            
+                if(!response.ok){
+                    throw new Error("Request Failed")
+                }
+                console.log(response)
+                const result = await response.json()
+                const currentYear = new Date().getFullYear()
+                console.log(currentYear - result)
+                console.log(currentYear)
+                console.log(result)
+                if(this.vehicle_age > currentYear - result){
+                    this.invalidAgeflag = true
+                    this.vehicle_age = ''
+                    console.log(currentYear - result)
+                    console.log('inside-if')
+                }
+                }
+                catch(err){
+                    console.log(err.message)
+                }
+            }
+        },
+        checkKm_driven(){
+            this.km_drivenwarnflag = false
+            this.km_drivenrejflag = false
+            if (this.vehicle_age && this.km_driven){
+                const kmPeryear = this.km_driven / this.vehicle_age 
+                if (kmPeryear < 3000 ) {
+                    this.km_drivemsg = 'The vehicle has unusually low kilometers driven for its age.'
+                    this.km_drivenwarnflag = true
+                }else if (kmPeryear >= 3000 && kmPeryear < 27000){
+                    this.km_drivenrejflag = false
+                    this.km_drivenwarnflag = false                    
+                }else if (kmPeryear >= 27000 && kmPeryear < 32000){
+                    this.km_drivenwarnflag = true 
+                    this.km_drivemsg = 'The vehicle has unusually high kilometers driven for its age.'
+                }else {
+                    this.km_drivenrejflag = true
+                    this.km_drivemsg = "Too high for the vehicle's age."
+                }
+                console.log(kmPeryear)
+            }else{
+                this.km_driven = ''
+                this.km_drivemsg = 'Please enter the above details.'
+            }
+        },
         selectBrand(e, brand){
-            if(this.selectedBrand != brand){    
+            if(this.brand != brand){    
                 this.ResetAfterBrand()
             }
-            this.selectedBrand = brand
             this.brand = brand
         },
         selectModel(e, model){
-            if(this.selectedModel != model){
+            if(this.model != model){
                 this.ResetAfterModel()
             }
-            this.selectedModel = model
             this.model = model
         },
         selectEngine(e, engine){
-            if(this.selectedEngine != engine){
+            if(this.engine != engine){
                 this.ResetAfterEngine()
             }
-            this.selectedEngine = engine 
             this.engine = engine
         },
         selectkm_driven(e, km){
             this.km_driven = km
         },
         selectFuel(e, fuel){
-            this.selectedFuel = fuel 
             this.fuel_type = fuel
         },
         selectTransmission(e, transmission){
-            this.selectedTransmission = transmission
             this.transmission_type = transmission
         },
         ResetAfterBrand(){
-            this.selectedModel = 'Select'
             this.model = ''
             this.ResetAfterModel()
         },
         ResetAfterModel(){
             this.engine_array = []
-            this.selectedEngine = 'Select'
             this.engine = ''  
             this.ResetAfterEngine()
         },
         ResetAfterEngine(){
             this.fuels = []
-            this.transmission = []
-            this.selectedFuel = 'Select'
-            this.selectedTransmission = 'Select'          
+            this.transmission = []      
             this.fuel_type = ''
             this.transmission_type = ''
             this.km_driven = ''
             this.mileage = ''
             this.vehicle_age = ''
-            this.checkMileagemsg = ''
         },
         sendPrediction(pred){
             this.$emit('prediction', pred)
@@ -382,9 +437,7 @@ export default {
             if(this.submitted){
                 this.submitted = false 
                 this.$emit('close')
-                console.log('inside-if')
             }
-            console.log('outside-if')
         },
         preventExponent(event){
             if (event.key == 'e' | event.key == 'E'){
@@ -396,7 +449,14 @@ export default {
 </script>
 
 <style>
-
+.error-message {
+    color: red;
+    font-size: 13px;
+}
+.warning-message {
+    color: #D97706;
+    font-size: 13px;
+}
 input{
     justify-content: left;
     width: 80%;
@@ -410,7 +470,7 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: 0;
 }
 label{
-    width: 400px;
+    width: 80%;
     background-color: aquamarine;
     text-align: left;
     padding: 5px;
@@ -441,15 +501,15 @@ label{
     cursor: pointer;
 }
 form{
-    width: 500px;
-    height: 740px;
+    width: 90%;
+    max-width: 500px;
+    height: auto;
     background-color: rgba(136, 218, 218, 0.934);
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 7px;
     position: relative;
-
 }
 .disable {
     cursor: default;

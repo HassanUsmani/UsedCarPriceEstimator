@@ -6,9 +6,9 @@
     </div>
     <div v-else>
         <p>Predicted Price: </p>
-        <span>{{Math.round(predicted_value / 100) * 100}}</span>
-        <p>Estimated Error: </p>
-        <span>&plusmn; {{Math.round(166836.49453108816 / 100) * 100}}</span>
+        <span>₹ {{Math.round(predicted_value / 100) * 100}}</span>
+        <p>Estimated RMSE: </p>
+        <span>₹ {{Math.round(166836.49453108816 / 100) * 100}}</span>
     </div>
     
   </div>
