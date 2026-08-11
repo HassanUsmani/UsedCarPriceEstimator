@@ -12,7 +12,7 @@
                 </div>
                 <div class="dropdown">
                     <ul >
-                        <li v-for="Brand in brands" :key="Brand" class="dropdown-item" value="Toyota" @click="selectBrand($event,Brand)">{{Brand}}</li>
+                        <li v-for="Brand in brands" :key="Brand" class="dropdown-item" value="Toyota" @click="selectBrand(Brand)">{{Brand}}</li>
                     </ul>
                 </div>
             </div>
@@ -23,7 +23,7 @@
                 </div>
                 <div class="dropdown">
                     <ul >
-                        <li v-for="(Model,index) in models[brand]" :key="index" class="dropdown-item" @click="selectModel($event,Model)">{{Model}}</li>
+                        <li v-for="(Model,index) in models[brand]" :key="index" class="dropdown-item" @click="selectModel(Model)">{{Model}}</li>
                     </ul>
                     <ul v-if="modelLoaded">
                         <li class="not-selected">please select the brand first.</li>
@@ -38,10 +38,10 @@
                 </div>
                 <div class="dropdown">
                     <ul>
-                        <li @click="selectEngine(e, Engine)" v-for="Engine in engine_array" :key ="Engine" class="dropdown-iem">{{Engine}}</li>
+                        <li @click="selectEngine(Engine)" v-for="Engine in engine_array" :key ="Engine" class="dropdown-iem">{{Engine}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="engineLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="engineLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
                 
@@ -54,10 +54,10 @@
                 </div> 
                 <div class="dropdown">
                     <ul>
-                        <li @click="selectFuel(e, Fuel)" v-for="Fuel in fuels" :key="Fuel" class="dropdown-item ">{{Fuel}}</li>
+                        <li @click="selectFuel(Fuel)" v-for="Fuel in fuels" :key="Fuel" class="dropdown-item ">{{Fuel}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="fuelLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="fuelLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
             </div>
@@ -70,12 +70,13 @@
             <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent' placeholder="Ex: 50000" @blur="checkKm_driven">
             <p v-if="km_drivenwarnflag" class="warning-message">{{km_drivemsg}}</p>
             <p v-if="km_drivenrejflag" class="error-message">Too high for the vehicle's age.</p>
-
+            <p v-if="km_drivenEmptyflag" class="error-message">please enter the above details first.</p>
 
             <label for="">mileage</label>    
             <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage" placeholder="Ex: 12.6">
             <p v-if="checkMileageflagEmpty" class="error-message">please enter the above details first.</p>
-            <p v-if="checkMileageflag" class="warning-message">The mileage is unusual for this type of vehicle</p>
+            <p v-if="checkMileageflag" class="warning-message">The mileage is unusual for this type of vehicle.</p>
+            <p v-if="checkMileageRejflag" class="error-message">The entered mileage is too high for a realistic vehicle.</p>
 
             <label for="">Transmission Type</label>
             <div @click="dropTransmission()" class="dropdown-box" :class ="{active: dropDownTransmission == true}">
@@ -84,10 +85,10 @@
                 </div> 
                 <div class="dropdown">
                     <ul>
-                        <li @click="selectTransmission(e, trans)" v-for="trans in transmission" :key="trans" class="dropdown-item ">{{trans}}</li>
+                        <li @click="selectTransmission(trans)" v-for="trans in transmission" :key="trans" class="dropdown-item ">{{trans}}</li>
                     </ul>
                     <ul>
-                        <li class="not-selected" v-if="transLoaded">please enter the above detais first.</li>
+                        <li class="not-selected" v-if="transLoaded">please enter the above details first.</li>
                     </ul>
                 </div>
             </div>
@@ -114,20 +115,15 @@ export default {
             modelLoaded : true,
             fuelLoaded : true,
             transLoaded : true,
+
             km_drivenrejflag : false,
             km_drivenwarnflag : false,
-
+            km_drivenEmptyflag : false,
             checkMileageflag : false,
             checkMileageflagEmpty : false,
-            km_drivenflag : false,
+            checkMileageRejflag : false,
             invalidAgeflag:false,
             km_drivemsg : '',
-
-            selectedBrand : 'Select',
-            selectedModel : 'Select',
-            selectedEngine : 'Select',
-            selectedFuel : 'Select',
-            selectedTransmission : 'Select',
             
             model : '',
             brand : '',
@@ -168,50 +164,56 @@ export default {
     },
     
     methods :{ 
-        Predict(){
-            if(this.brand && this.model && this.engine && this.km_driven && 
-            this.vehicle_age && this.mileage && this.fuel_type && this.transmission_type){
-                this.loading(true)
-                const data = {
-                    brand : this.brand,
-                    model : this.model,
-                    vehicle_age : this.vehicle_age,
-                    km_driven : this.km_driven,
-                    mileage : this.mileage,
-                    fuel_type : this.fuel_type,
-                    transmission_type : this.transmission_type,
-                    engine : this.engine
-                }
-                fetch('http://localhost:8000/post' ,{
-                    method : "POST",
-                    headers : {
-                    'content-type':'application/json'
-                    }, body : JSON.stringify(data)
-                }).then(response => {
-                    if(!response.ok){
-                        throw new Error ("Invalid Error")
-                    }
-                    return response.json()
-                }).then(result => {console.log(result),this.sendPrediction(result)})
-                  .catch(err => {console.log(err.message)})
-                this.loading(false)
-                this.submitted = true
-            }else{
-                alert('Enter all the required information')
+        async Predict(){
+            if (this.km_drivenrejflag || this.checkMileageRejflag){
+                console.log('hi')
+                alert ("Check the input values")
+                return 
             }
+            if (this.brand && this.model && this.engine && this.fuel_type && this.vehicle_age
+                && this.km_driven && this.mileage && this.transmission_type){
+                    this.loading(true)
+                    try {
+                        const data = {
+                            brand : this.brand,
+                            model : this.model,
+                            engine : this.engine, 
+                            fuel_type : this.fuel_type,
+                            vehicle_age : this.vehicle_age,
+                            km_driven : this.km_driven,
+                            mileage : this.mileage,
+                            transmission_type : this.transmission_type
+                        }
+                        const response = await fetch("http://localhost:8000/post",{
+                            method : "POST",
+                            headers : {
+                                "content-type":"application/json",
+                            },   body : JSON.stringify(data)
+                        })
+                        if(!response.ok){
+                            console.log(response)
+                            throw new Error ("Request failed")
+                        }
+                        const result = await response.json()
+                        this.sendPrediction(result)
+                        console.log(result)
+                        this.submitted = true 
+                        this.loading(false)
+                    } 
+                    catch(err){
+                        console.log(err.message)
+                    }
+                }
+                else{
+                    alert ("Enter the all the details")
+                }
         },
         dropBrand(){
             if(this.dropDownbrand){
                 this.dropDownbrand = false
             }else{
+                this.dropDownstatus()
                 this.dropDownbrand = true 
-                this.dropDownmodel = false  
-                this.dropDownengine = false
-                this.dropDownFuel = false
-                this.dropDownTransmission = false
-                this.checkMileageflag = false
-                this.checkMileageflagEmpty = false
-                this.km_drivenflag = false
             }
         },
         dropModel(){
@@ -221,95 +223,84 @@ export default {
                 if(this.brand){
                     this.modelLoaded = false
                 }
+                this.dropDownstatus()
                 this.dropDownmodel = true
-                this.dropDownbrand = false
-                this.dropDownengine = false
-                this.dropDownFuel = false
-                this.dropDownTransmission = false
-                this.checkMileageflag = false
-                this.checkMileageflagEmpty = false
-                this.km_drivenwarnflag = false
-                this.km_drivenrejflag = false
             }
         },
         async dropEngine(){
             if(this.dropDownengine){
                 this.dropDownengine = false
             }else{
-                await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`,{
-                    method : "GET"
-                }).then(response => {
-                    if(!response.ok){
-                        throw new Error ("Request Failed")
-                    }
-                    this.engineLoaded = false
-                    return response.json()
-                    
-                }).then(result => {this.engine_array = result, console.log(result)})
-                  .catch(err => {console.log(err.message), this.engineLoaded = true})
-                this.dropDownengine = true 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false 
-                this.dropDownFuel = false 
-                this.dropDownTransmission = false
-                this.checkMileageflag = false
-                this.checkMileageflagEmpty = false
-                this.km_drivenwarnflag = false
-                this.km_drivenrejflag = false
+                try {
+                const response = await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+                if(!response.ok){
+                    console.log(this.engineLoaded)
+                    throw new Error("Request failed")
+                }
+                const result = await response.json()
+                this.engine_array = result 
+                this.engineLoaded = false 
+                this.dropDownstatus()
+                
+                }
+                catch (err){
+                    console.log(err.message)
+                }
+                finally {
+                    this.dropDownengine = true  
+                }
             }
-
         },
         async dropFuel(){
             if(this.dropDownFuel){
                 this.dropDownFuel = false
             }else{
-                await fetch(`http://localhost:8000/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
-                    method : "GET"
-                }).then(response => {
+                try {
+                    const response = await fetch(`http://localhost:8000/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
                     if(!response.ok){
-                        throw new Error ("Request Failed")
+                        throw new Error("Request failed")
                     }
-                    this.fuelLoaded = false
-                    return response.json()
-                }).then(result => this.fuels = result)
-                  .catch(err => {console.log(err.message), this.fuelLoaded = true})
-                this.dropDownFuel = true 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false 
-                this.dropDownengine = false
-                this.dropDownTransmission = false
-                this.checkMileageflag = false
-                this.checkMileageflagEmpty = false
-                this.km_drivenflag = false
-                this.km_drivenwarnflag = false
-                this.km_drivenrejflag = false
+                    const result = await response.json()
+                    this.fuelLoaded = false 
+                    this.fuels = result 
+                    this.dropDownstatus()  
+                }
+                catch(err){
+                    console.log(err.message)
+                }
+                finally {
+                    this.dropDownFuel = true
+                }
             }
         },
         async dropTransmission(){
             if(this.dropDownTransmission){
                 this.dropDownTransmission = false
             }else{
-                await fetch(`http://localhost:8000/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`,{
-                    method : "GET",
-                   
-                }).then(response => {
+                try {
+                    const response = await fetch(`http://localhost:8000/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
                     if(!response.ok){
-                        throw new Error("Request Failed")
+                        throw new Error ("Request failed")
                     }
-                    this.transLoaded=false
-                    return response.json()
-                })
-                  .then(result => this.transmission = result)
-                  .catch(err => {console.log(err.message),this.transLoaded=true})
-                this.dropDownTransmission = true 
-                this.dropDownFuel = false 
-                this.dropDownbrand = false 
-                this.dropDownmodel = false
-                this.dropDownengine = false 
+                    const result = await response.json()
+                    this.transmission = result 
+                    this.dropDownFuel = false 
+                    this.dropDownbrand = false 
+                    this.dropDownmodel = false
+                    this.dropDownengine = false 
+                    this.transLoaded = false
+                }
+                catch (err){
+                    console.log(err.message)
+                } finally {
+                    this.dropDownTransmission = true 
+                }
             }
         },
         async checkMileage(){
             this.checkMileageflag = false
+            this.checkMileageflagEmpty = false
+            this.checkMileageRejflag = false
             if(this.engine && this.fuel_type && this.mileage){
                 try {
                     const response = await fetch(
@@ -319,7 +310,9 @@ export default {
                         throw new Error("Request Failed")
                     }
                     const res = await response.json()
-                    if(this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
+                    if(this.mileage > 40){
+                        this.checkMileageRejflag = true
+                    }else if (this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
                         this.checkMileageflag = true
                     }
                 }
@@ -340,19 +333,13 @@ export default {
                 if(!response.ok){
                     throw new Error("Request Failed")
                 }
-                console.log(response)
                 const result = await response.json()
                 const currentYear = new Date().getFullYear()
-                console.log(currentYear - result)
-                console.log(currentYear)
-                console.log(result)
                 if(this.vehicle_age > currentYear - result){
                     this.invalidAgeflag = true
                     this.vehicle_age = ''
-                    console.log(currentYear - result)
-                    console.log('inside-if')
                 }
-                }
+            }
                 catch(err){
                     console.log(err.message)
                 }
@@ -361,15 +348,16 @@ export default {
         checkKm_driven(){
             this.km_drivenwarnflag = false
             this.km_drivenrejflag = false
+            this.km_drivenEmptyflag = false
             if (this.vehicle_age && this.km_driven){
                 const kmPeryear = this.km_driven / this.vehicle_age 
                 if (kmPeryear < 3000 ) {
                     this.km_drivemsg = 'The vehicle has unusually low kilometers driven for its age.'
                     this.km_drivenwarnflag = true
-                }else if (kmPeryear >= 3000 && kmPeryear < 27000){
+                }else if (kmPeryear >= 2000 && kmPeryear < 28000){
                     this.km_drivenrejflag = false
                     this.km_drivenwarnflag = false                    
-                }else if (kmPeryear >= 27000 && kmPeryear < 32000){
+                }else if (kmPeryear >= 28000 && kmPeryear < 32000){
                     this.km_drivenwarnflag = true 
                     this.km_drivemsg = 'The vehicle has unusually high kilometers driven for its age.'
                 }else {
@@ -378,35 +366,35 @@ export default {
                 }
                 console.log(kmPeryear)
             }else{
-                this.km_driven = ''
+                this.km_drivenEmptyflag = true
                 this.km_drivemsg = 'Please enter the above details.'
             }
         },
-        selectBrand(e, brand){
+        selectBrand(brand){
             if(this.brand != brand){    
                 this.ResetAfterBrand()
             }
             this.brand = brand
         },
-        selectModel(e, model){
+        selectModel(model){
             if(this.model != model){
                 this.ResetAfterModel()
             }
             this.model = model
         },
-        selectEngine(e, engine){
+        selectEngine(engine){
             if(this.engine != engine){
                 this.ResetAfterEngine()
             }
             this.engine = engine
         },
-        selectkm_driven(e, km){
+        selectkm_driven(km){
             this.km_driven = km
         },
-        selectFuel(e, fuel){
+        selectFuel(fuel){
             this.fuel_type = fuel
         },
-        selectTransmission(e, transmission){
+        selectTransmission(transmission){
             this.transmission_type = transmission
         },
         ResetAfterBrand(){
@@ -426,6 +414,7 @@ export default {
             this.km_driven = ''
             this.mileage = ''
             this.vehicle_age = ''
+            this.warningStatus()
         },
         sendPrediction(pred){
             this.$emit('prediction', pred)
@@ -443,6 +432,21 @@ export default {
             if (event.key == 'e' | event.key == 'E'){
                 event.preventDefault()
             }
+        },
+        dropDownstatus(){
+            this.dropDownFuel = false 
+            this.dropDownbrand = false 
+            this.dropDownmodel = false 
+            this.dropDownengine = false
+            this.dropDownTransmission = false
+        },
+        warningStatus(){
+            this.checkMileageflag = false
+            this.checkMileageflagEmpty = false
+            this.checkMileageRejflag = false
+            this.km_drivenEmptyflag = false
+            this.km_drivenwarnflag = false
+            this.km_drivenrejflag = false
         }
     }
 }
@@ -458,7 +462,6 @@ export default {
     font-size: 13px;
 }
 input{
-    justify-content: left;
     width: 80%;
     padding: 5px;
     border-radius: 5px;
@@ -480,15 +483,11 @@ label{
     font-weight: 200;
 }
 .maindiv h2{
-    /* background-color: cornsilk; */
     padding: 15px 2px;
-}
-.maindiv .dropdown-box{
-    align-items: center;   
 }
 
 .maindiv button{
-    background-color: rgba(93, 174, 142, 0.768);
+    background-color: rgba(125, 184, 213, 0.768);
     font-size: 16px;
     font-weight: bold;
     width: 100px;
@@ -521,40 +520,26 @@ form{
     inset: 0;
     background-color: transparent;
 }
-.dropdown-box label{
-    text-align: left;
-    background-color: azure;
-}
-
 *{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-/* .dropdown-box .selected-item{
-    width: 100%;
-} */
-
 .dropdown-box input{
-    width: 80%; 
     border :1px solid rgb(160, 200, 200);
-    padding-left: 0px;
-    padding-right: 0px;
-    outline: none;
-    border-radius: 5px;
-    padding: 5px;
     color: rgb(119, 101, 22);
 }
 .dropdown-box .selected-item{
     position: relative;
 }
-.dropdown-box .selected-item::after{ /**after pseudo class */
+.dropdown-box .selected-item::after{
     content: '';
     width: 3px;
     height: 3px;
-    border: 2px solid rgb(200,182,100);
     border-color: transparent green green transparent;
+    border-style: solid;
+    border-width: 2px;
     position: absolute;
     top: 50%;
     right: 12%;
@@ -563,7 +548,6 @@ form{
 .dropdown-box{
     width: 100%;
     position: relative;
-    align-items: center;
 
 }
 .dropdown-box .selected-item, .dropdown-box .selected-item input{
@@ -571,7 +555,7 @@ form{
 }
 .dropdown-box .dropdown{
     box-shadow: 0 5px 15px rgb(0, 0,0, 15%);
-    border-radius:  5px;
+    border-radius: 5px;
     max-height: 100px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -579,39 +563,23 @@ form{
     position: absolute;
     z-index: 99;
     background-color: rgb(231, 229, 229);
-    width: 400px;
-    justify-self: center;
+    width: 80%;
+    left: 10%;
 }
 .dropdown-box.active .dropdown{
     display:block;
 }
 .dropdown-box .dropdown ul{
     list-style: none;
-    align-items: center;
-}
-.dropdown-box .dropdown .search-input{
-    margin: 7px 5px 0px 5px;
-    padding-top: 7px;
-    
 }
 .dropdown-box .dropdown ul li{
     padding: 2px 5px;
     cursor: pointer;
+    overflow-wrap: break-word;
 }
 .dropdown-box .dropdown ul li:hover{
     color: rgb(107, 107, 255);
     background-color: rgba(209, 209, 209, 0.407);
-}
-.dropdown-box .dropdown ul li.active{
-    background-color: rgb(160, 200, 200);
-    color: purple;
-}
-.selectDropdown select{
-    width: 400px;
-    display: inline-block;
-    height: 30px;
-    outline: none;
-    
 }
 .dropdown-box .dropdown .not-selected:hover{
     cursor:default;
@@ -622,6 +590,27 @@ form{
     color: red;
     font-size: 14px;
     font-weight: 100;
-    /* padding-top: 5px; */
+}
+
+@media (max-width: 480px) {
+    label {
+        font-size: 18px;
+    }
+    .maindiv button {
+        width: 90px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+@media (max-width: 300px) {
+    label,
+    input,
+    .dropdown-box .selected-item input,
+    .dropdown-box .dropdown {
+        width: 90%;
+    }
+    .dropdown-box .dropdown {
+        left: 5%;
+    }
 }
 </style>
