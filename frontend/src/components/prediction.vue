@@ -26,31 +26,33 @@ export default {
     z-index: 2;
     top: 40%;
     left: 50%;
-    justify-self: center;
-    position: fixed;
+    /* justify-self: center; */
+    /* position: fixed; */
     background: rgb(245, 243, 243);
-    width: 200px;
-    height: 150px;
+    max-width: 200px;
+    width:60%;
+    height: auto;
+    min-height: 150px;
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     position: absolute;
     transform: translate(-50%,-60%);
 }
 .prediction_box p{
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-weight: 500;
-    font-size: 18px;
+    font-size: 20px;
     padding-top: 15px;
 }
 
 .loader {
     width: 40px;
-    height: 40px;    
-    right: 40%;
-    position: fixed;
+    height: 40px; 
+    left: 50%;
+    top: 50%;   
+    position: absolute;
     display: flex;
-    transition: opacity 0.75s, visibility 0.75s;
-  
+    /* transition: opacity 0.75s, visibility 0.75s; */
+    transform: translate(-50%, -50%);
 }
 
 .loader::after{
@@ -75,6 +77,11 @@ export default {
 
     to {
         transform: rotate(1turn);
+    }
+}
+@media (max-width: 480px) {
+    .prediction_box p {
+        font-size: 17px;
     }
 }
 </style>

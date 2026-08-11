@@ -231,6 +231,7 @@ export default {
             if(this.dropDownengine){
                 this.dropDownengine = false
             }else{
+ update_validation
                 try {
                 const response = await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
                 if(!response.ok){
@@ -249,6 +250,7 @@ export default {
                 finally {
                     this.dropDownengine = true  
                 }
+
             }
         },
         async dropFuel(){
@@ -609,6 +611,7 @@ form{
     .dropdown-box .dropdown {
         width: 90%;
     }
+ dev
     .dropdown-box .dropdown {
         left: 5%;
     }
