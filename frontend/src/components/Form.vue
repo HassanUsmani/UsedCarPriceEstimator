@@ -63,20 +63,16 @@
             </div>
 
             <label for="">vehicle_age</label>    
-            <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent' @blur="checkVehicle_age" placeholder="Ex: 9">
-            <p v-if="invalidAgeflag" class="error-message">The entered vehicle age is not valid for the selected model. Please check your input.</p>
+            <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent' @blur="checkVehicle_age" placeholder="Ex: 9" @focus="reqFieldsveh_age" :readonly="veh_agereqflag">
+            <p v-if="vehicle_ageMessage" :class="vehicle_ageMessagetype === 'warning'? 'warning-message':'error-message'">{{vehicle_ageMessage}}</p>
 
             <label for="">km_driven</label>    
-            <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent' placeholder="Ex: 50000" @blur="checkKm_driven">
-            <p v-if="km_drivenwarnflag" class="warning-message">{{km_drivemsg}}</p>
-            <p v-if="km_drivenrejflag" class="error-message">Too high for the vehicle's age.</p>
-            <p v-if="km_drivenEmptyflag" class="error-message">please enter the above details first.</p>
+            <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent' placeholder="Ex: 50000" @blur="checkKm_driven" @focus="reqFieldskm" :readonly="km_drivenreqflag">
+            <p v-if="km_drivenMessage" :class="km_drivenMessagetype === 'warning'? 'warning-message':'error-message'">{{km_drivenMessage}}</p>
 
             <label for="">mileage</label>    
-            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage" placeholder="Ex: 12.6">
-            <p v-if="checkMileageflagEmpty" class="error-message">please enter the above details first.</p>
-            <p v-if="checkMileageflag" class="warning-message">The mileage is unusual for this type of vehicle.</p>
-            <p v-if="checkMileageRejflag" class="error-message">The entered mileage is too high for a realistic vehicle.</p>
+            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage" placeholder="Ex: 12.6" @focus="reqFieldsmil" :readonly="checkMileagereqflag">
+            <p v-if="mileageMessage" :class="mileageMessagetype === 'warning'? 'warning-message' : 'error-message'">{{mileageMessage}}</p>
 
             <label for="">Transmission Type</label>
             <div @click="dropTransmission()" class="dropdown-box" :class ="{active: dropDownTransmission == true}">
@@ -109,21 +105,23 @@ export default {
             dropDownTransmission:false,
             predicted:false,
             submitted:false,
-            
 
             engineLoaded : true,
             modelLoaded : true,
             fuelLoaded : true,
             transLoaded : true,
 
-            km_drivenrejflag : false,
-            km_drivenwarnflag : false,
-            km_drivenEmptyflag : false,
-            checkMileageflag : false,
-            checkMileageflagEmpty : false,
-            checkMileageRejflag : false,
-            invalidAgeflag:false,
-            km_drivemsg : '',
+            mileageMessage : '',
+            mileageMessagetype : '',
+            checkMileagereqflag : false,
+
+            km_drivenMessage : '',
+            km_drivenMessagetype : '',
+            km_drivenreqflag : false,
+
+            vehicle_ageMessage : '',
+            vehicle_ageMessagetype : '',
+            veh_agereqflag : false,
             
             model : '',
             brand : '',
@@ -165,8 +163,10 @@ export default {
     
     methods :{ 
         async Predict(){
-            if (this.km_drivenrejflag || this.checkMileageRejflag){
-                console.log('hi')
+            await this.checkMileage()
+            await this.checkVehicle_age()
+            this.checkKm_driven()
+            if (this.km_drivenMessagetype == 'error' || this.mileageMessagetype == 'error' || this.vehicle_ageMessagetype == 'error'){
                 alert ("Check the input values")
                 return 
             }
@@ -231,7 +231,6 @@ export default {
             if(this.dropDownengine){
                 this.dropDownengine = false
             }else{
- update_validation
                 try {
                 const response = await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
                 if(!response.ok){
@@ -300,10 +299,8 @@ export default {
             }
         },
         async checkMileage(){
-            this.checkMileageflag = false
-            this.checkMileageflagEmpty = false
-            this.checkMileageRejflag = false
-            if(this.engine && this.fuel_type && this.mileage){
+            this.checkMileagereqflag = false
+            if(this.engine && this.mileage){
                 try {
                     const response = await fetch(
                         `http://localhost:8000/mileage/${encodeURIComponent(this.engine)}`
@@ -313,63 +310,96 @@ export default {
                     }
                     const res = await response.json()
                     if(this.mileage > 40){
-                        this.checkMileageRejflag = true
-                    }else if (this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
-                        this.checkMileageflag = true
+                        this.mileageMessage = "The entered mileage is too high for a realistic vehicle"
+                        this.mileageMessagetype = "error"
+                        return
                     }
+                    if(this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
+                        this.mileageMessage = "The mileage is unusual for this type of vehicle"
+                        this.mileageMessagetype = "warning"
+                        return 
+                    }
+                    this.mileageMessage = ''
+                    this.mileageMessagetype = ''
                 }
                 catch (err){
                     console.log(err.message)
                 }
             }
-            else if (!(this.engine && this.fuel_type)){
-                this.checkMileageflagEmpty = true
+        },reqFieldsmil(){
+            if(!this.engine){
+                this.checkMileagereqflag = true
+                this.mileageMessage = "please enter the above details."
+                this.mileageMessagetype = "error"
+            }else{
+                this.checkMileagereqflag = false
+                this.mileageMessage = ""
+                this.mileageMessagetype = ""
             }
         },
         async checkVehicle_age(){
-            this.invalidAgeflag = false
+            this.veh_agereqflag = false
             if(this.brand && this.model){
                 try {
-                const response = await fetch(`http://localhost:8000/vehicle_age/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
-            
-                if(!response.ok){
-                    throw new Error("Request Failed")
+                    const response = await fetch(`http://localhost:8000/vehicle_age/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+                
+                    if(!response.ok){
+                        throw new Error("Request Failed")
+                    }
+                    const result = await response.json()
+                    const currentYear = new Date().getFullYear()
+                    if(this.vehicle_age > currentYear - result){
+                        this.vehicle_ageMessage = 'The entered vehicle age is not valid for the selected model. Please check your input.'
+                        this.vehicle_ageMessagetype = 'error'
+                    }
+                    this.vehicle_ageMessage = ''
+                    this.vehicle_ageMessagetype = ''
                 }
-                const result = await response.json()
-                const currentYear = new Date().getFullYear()
-                if(this.vehicle_age > currentYear - result){
-                    this.invalidAgeflag = true
-                    this.vehicle_age = ''
-                }
-            }
                 catch(err){
                     console.log(err.message)
                 }
             }
         },
+        reqFieldsveh_age(){
+            if(!this.brand || !this.model){
+                this.veh_agereqflag = true
+                this.vehicle_ageMessage = 'please enter the above details.'
+                this.vehicle_ageMessagetype = 'error'
+            }else{
+                this.checkveh_ageflagEmpty = false
+                this.vehicle_ageMessage = ''
+                this.vehicle_ageMessagetype = ''
+            }
+        },
         checkKm_driven(){
-            this.km_drivenwarnflag = false
-            this.km_drivenrejflag = false
-            this.km_drivenEmptyflag = false
+            this.km_drivenreqflag = false
             if (this.vehicle_age && this.km_driven){
                 const kmPeryear = this.km_driven / this.vehicle_age 
-                if (kmPeryear < 3000 ) {
-                    this.km_drivemsg = 'The vehicle has unusually low kilometers driven for its age.'
-                    this.km_drivenwarnflag = true
+                if (kmPeryear < 2000 ) {
+                    this.km_drivenMessage = 'The vehicle has unusually low kilometers driven for its age.'
+                    this.km_drivenMessagetype = 'warning' 
                 }else if (kmPeryear >= 2000 && kmPeryear < 28000){
-                    this.km_drivenrejflag = false
-                    this.km_drivenwarnflag = false                    
+                    this.km_drivenMessage = ''
+                    this.km_drivenMessagetype = ''                    
                 }else if (kmPeryear >= 28000 && kmPeryear < 32000){
-                    this.km_drivenwarnflag = true 
-                    this.km_drivemsg = 'The vehicle has unusually high kilometers driven for its age.'
+                    this.km_drivenMessagetype = 'warning' 
+                    this.km_drivenMessage = 'The vehicle has unusually high kilometers driven for its age.'
                 }else {
-                    this.km_drivenrejflag = true
-                    this.km_drivemsg = "Too high for the vehicle's age."
+                    this.km_drivenMessagetype = 'error'
+                    this.km_drivenMessage = "Too high for the vehicle's age."
                 }
                 console.log(kmPeryear)
+            }
+        },
+        reqFieldskm(){
+            if(!this.vehicle_age){
+                this.km_drivenMessagetype = 'error'
+                this.km_drivenMessage = 'please enter the above details.'
+                this.km_drivenreqflag = true
             }else{
-                this.km_drivenEmptyflag = true
-                this.km_drivemsg = 'Please enter the above details.'
+                this.km_drivenreqflag = false 
+                this.km_drivenMessagetype = ''
+                this.km_drivenMessage = ''
             }
         },
         selectBrand(brand){
@@ -443,12 +473,15 @@ export default {
             this.dropDownTransmission = false
         },
         warningStatus(){
-            this.checkMileageflag = false
-            this.checkMileageflagEmpty = false
-            this.checkMileageRejflag = false
-            this.km_drivenEmptyflag = false
-            this.km_drivenwarnflag = false
-            this.km_drivenrejflag = false
+            this.mileageMessage = ''
+            this.mileageMessagetype = ''
+            this.checkMileagereqflag = false
+            this.km_drivenMessage = ''
+            this.km_drivenMessagetype = ''
+            this.km_drivenreqflag = false
+            this.vehicle_ageMessage = ''
+            this.vehicle_ageMessagetype = ''
+            this.veh_agereqflag = false
         }
     }
 }
@@ -501,9 +534,11 @@ label{
 .maindiv button:hover{
     cursor: pointer;
 }
+.maindiv {
+    width: 100%;
+}
 form{
-    width: 90%;
-    max-width: 500px;
+    width: min(90%,500px);
     height: auto;
     background-color: rgba(136, 218, 218, 0.934);
     display: flex;
@@ -611,9 +646,9 @@ form{
     .dropdown-box .dropdown {
         width: 90%;
     }
- dev
+ /* dev
     .dropdown-box .dropdown {
         left: 5%;
-    }
+    } */
 }
 </style>
