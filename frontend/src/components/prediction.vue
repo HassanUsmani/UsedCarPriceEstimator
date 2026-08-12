@@ -26,9 +26,7 @@ export default {
     z-index: 2;
     top: 40%;
     left: 50%;
-    /* justify-self: center; */
-    /* position: fixed; */
-    background: rgb(245, 243, 243);
+    background-color: #eeeff2;
     max-width: 200px;
     width:60%;
     height: auto;
@@ -51,7 +49,6 @@ export default {
     top: 50%;   
     position: absolute;
     display: flex;
-    /* transition: opacity 0.75s, visibility 0.75s; */
     transform: translate(-50%, -50%);
 }
 
@@ -65,11 +62,10 @@ export default {
     border-top-color: #4285F4;
 }
 .prediction_box.active{
-    background-color: #e2fbea;
+    background-color: #e6fbedbd;
     color: #09963c;
-    border: 5px solid #74c28f;
+    border: 2px solid #86bb99;
 }
-/* bbf7d0 */
 @keyframes loading {
     from {
         transform: rotate(0turn);
@@ -82,6 +78,7 @@ export default {
 @media (max-width: 480px) {
     .prediction_box p {
         font-size: 17px;
+        /* width: 50%; */
     }
 }
 </style>

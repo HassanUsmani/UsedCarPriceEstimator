@@ -63,11 +63,13 @@ export default{
 }
 body{
   margin :0; 
+  background-color: #ebecef;
 }
 .parent{
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
   width: 100%;
 }
 
