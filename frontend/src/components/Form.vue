@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            <label for="">Engine</label>
+            <label for="">Engine (cc)</label>
             <div @click="dropEngine()" class="dropdown-box" :class="{active : dropDownengine == true}">
                 <div class="selected-item">
                     <input type="text" readonly :value='engine' placeholder="Select">
@@ -62,6 +62,10 @@
                 </div>
             </div>
 
+            <label for="">mileage</label>    
+            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.01" @blur="checkMileage" placeholder="Ex: 12.6" @focus="reqFieldsmil" :readonly="checkMileagereqflag">
+            <p v-if="mileageMessage" :class="mileageMessagetype === 'warning'? 'warning-message' : 'error-message'">{{mileageMessage}}</p>
+
             <label for="">vehicle_age</label>    
             <input type="number" min='1' v-model.number="vehicle_age" @keydown='preventExponent' @blur="checkVehicle_age" placeholder="Ex: 9" @focus="reqFieldsveh_age" :readonly="veh_agereqflag">
             <p v-if="vehicle_ageMessage" :class="vehicle_ageMessagetype === 'warning'? 'warning-message':'error-message'">{{vehicle_ageMessage}}</p>
@@ -69,10 +73,6 @@
             <label for="">km_driven</label>    
             <input type="number"  min="100" v-model.number="km_driven" @keydown='preventExponent' placeholder="Ex: 50000" @blur="checkKm_driven" @focus="reqFieldskm" :readonly="km_drivenreqflag">
             <p v-if="km_drivenMessage" :class="km_drivenMessagetype === 'warning'? 'warning-message':'error-message'">{{km_drivenMessage}}</p>
-
-            <label for="">mileage</label>    
-            <input type="number" min="1" v-model.number="mileage" @keydown='preventExponent' step="0.1" @blur="checkMileage" placeholder="Ex: 12.6" @focus="reqFieldsmil" :readonly="checkMileagereqflag">
-            <p v-if="mileageMessage" :class="mileageMessagetype === 'warning'? 'warning-message' : 'error-message'">{{mileageMessage}}</p>
 
             <label for="">Transmission Type</label>
             <div @click="dropTransmission()" class="dropdown-box" :class ="{active: dropDownTransmission == true}">
@@ -103,7 +103,7 @@ export default {
             dropDownengine : false,
             dropDownFuel:false,
             dropDownTransmission:false,
-            predicted:false,
+
             submitted:false,
 
             engineLoaded : true,
@@ -196,9 +196,9 @@ export default {
                         }
                         const result = await response.json()
                         this.sendPrediction(result)
-                        console.log(result)
                         this.submitted = true 
                         this.loading(false)
+                        
                     } 
                     catch(err){
                         console.log(err.message)
@@ -315,7 +315,7 @@ export default {
                         return
                     }
                     if(this.mileage > Math.round(res.max + 2) || this.mileage < Math.round(res.min - 2)){
-                        this.mileageMessage = "The mileage is unusual for this type of vehicle"
+                        this.mileageMessage = "The mileage is unusual for this type of vehicle."
                         this.mileageMessagetype = "warning"
                         return 
                     }
@@ -329,7 +329,7 @@ export default {
         },reqFieldsmil(){
             if(!this.engine){
                 this.checkMileagereqflag = true
-                this.mileageMessage = "please enter the above details."
+                this.mileageMessage = "please enter the above details first."
                 this.mileageMessagetype = "error"
             }else{
                 this.checkMileagereqflag = false
@@ -351,9 +351,10 @@ export default {
                     if(this.vehicle_age > currentYear - result){
                         this.vehicle_ageMessage = 'The entered vehicle age is not valid for the selected model. Please check your input.'
                         this.vehicle_ageMessagetype = 'error'
+                    }else{
+                        this.vehicle_ageMessage = ''
+                        this.vehicle_ageMessagetype = ''
                     }
-                    this.vehicle_ageMessage = ''
-                    this.vehicle_ageMessagetype = ''
                 }
                 catch(err){
                     console.log(err.message)
@@ -363,7 +364,7 @@ export default {
         reqFieldsveh_age(){
             if(!this.brand || !this.model){
                 this.veh_agereqflag = true
-                this.vehicle_ageMessage = 'please enter the above details.'
+                this.vehicle_ageMessage = 'please enter the above details first.'
                 this.vehicle_ageMessagetype = 'error'
             }else{
                 this.checkveh_ageflagEmpty = false
@@ -388,13 +389,12 @@ export default {
                     this.km_drivenMessagetype = 'error'
                     this.km_drivenMessage = "Too high for the vehicle's age."
                 }
-                console.log(kmPeryear)
             }
         },
         reqFieldskm(){
             if(!this.vehicle_age){
                 this.km_drivenMessagetype = 'error'
-                this.km_drivenMessage = 'please enter the above details.'
+                this.km_drivenMessage = 'please enter the above details first.'
                 this.km_drivenreqflag = true
             }else{
                 this.km_drivenreqflag = false 
@@ -501,6 +501,12 @@ input{
     padding: 5px;
     border-radius: 5px;
     outline: none;
+    background-color: #F8FAFC;
+}
+input[type="number"] {
+    border: 1px solid #B8CCCC;
+    box-sizing: border-box;
+    color: rgb(119, 101, 22);
 }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -509,7 +515,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 label{
     width: 80%;
-    background-color: aquamarine;
+    background-color: #f1f3faf0;
     text-align: left;
     padding: 5px;
     margin: 3px;
@@ -519,20 +525,23 @@ label{
 }
 .maindiv h2{
     padding: 15px 2px;
+    color: #285656;
 }
 
 .maindiv button{
-    background-color: rgba(125, 184, 213, 0.768);
+    background-color: #3d6fdacb;
+    color: white;
     font-size: 16px;
     font-weight: bold;
     width: 100px;
     height: 40px;
     border-radius: 8px;
     margin: 5px;
-    box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.247);
+    box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.284);
 }
 .maindiv button:hover{
     cursor: pointer;
+    background-color: #1D4ED8;
 }
 .maindiv {
     width: 100%;
@@ -540,9 +549,10 @@ label{
 form{
     width: min(90%,500px);
     height: auto;
-    background-color: rgba(136, 218, 218, 0.934);
+    background-color: #ffffff;
     display: flex;
     flex-direction: column;
+    border:2px Solid #CBD5E1;
     align-items: center;
     border-radius: 7px;
     position: relative;
@@ -564,7 +574,7 @@ form{
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 .dropdown-box input{
-    border :1px solid rgb(160, 200, 200);
+    border :1px solid #CBD5E1;
     color: rgb(119, 101, 22);
 }
 .dropdown-box .selected-item{
@@ -599,7 +609,7 @@ form{
     display: none;
     position: absolute;
     z-index: 99;
-    background-color: rgb(231, 229, 229);
+    background-color: #F1F7F7;
     width: 80%;
     left: 10%;
 }
@@ -616,11 +626,11 @@ form{
 }
 .dropdown-box .dropdown ul li:hover{
     color: rgb(107, 107, 255);
-    background-color: rgba(209, 209, 209, 0.407);
+    background-color: #D8EBEB;
 }
 .dropdown-box .dropdown .not-selected:hover{
     cursor:default;
-    background-color: rgb(231, 229, 229);
+    background-color: #F1F7F7;
     color:red;
 }
 .dropdown-box .dropdown .not-selected{
@@ -646,9 +656,5 @@ form{
     .dropdown-box .dropdown {
         width: 90%;
     }
- /* dev
-    .dropdown-box .dropdown {
-        left: 5%;
-    } */
 }
 </style>
