@@ -68,22 +68,7 @@ body{
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
-@media (max-width: 480px) {
-    label {
-        font-size: 18px;
-    }
-}
-@media (max-width: 300px) {
-    label,
-    input,
-    .dropdown-box .selected-item input,
-    .dropdown-box .dropdown {
-        width: 90%;
-    }
 
-    .dropdown-box .dropdown {
-        left: 5%;
-    }
-}
 </style>
