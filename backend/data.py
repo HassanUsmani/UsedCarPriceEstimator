@@ -1,6 +1,10 @@
-import pandas as pd 
+from pathlib import Path
+import pandas as pd
 
-df = pd.read_csv("../Data/carDekhoDataset_preprocessed.csv")
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_PATH = BASE_DIR / "Data" / "preprocessedDataset.csv"
+
+df = pd.read_csv(DATA_PATH)
 df["engine_group"] = pd.cut(
     df["engine"],
     bins=[0, 1000, 1500, 2000, 2500, 3000, float("inf")],

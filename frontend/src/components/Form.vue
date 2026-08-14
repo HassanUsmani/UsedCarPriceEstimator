@@ -379,10 +379,10 @@ export default {
                 if (kmPeryear < 2000 ) {
                     this.km_drivenMessage = 'The vehicle has unusually low kilometers driven for its age.'
                     this.km_drivenMessagetype = 'warning' 
-                }else if (kmPeryear >= 2000 && kmPeryear < 28000){
+                }else if (kmPeryear >= 2000 && kmPeryear < 29000){
                     this.km_drivenMessage = ''
                     this.km_drivenMessagetype = ''                    
-                }else if (kmPeryear >= 28000 && kmPeryear < 32000){
+                }else if (kmPeryear >= 29000 && kmPeryear < 35000){
                     this.km_drivenMessagetype = 'warning' 
                     this.km_drivenMessage = 'The vehicle has unusually high kilometers driven for its age.'
                 }else {
