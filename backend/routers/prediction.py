@@ -20,7 +20,7 @@ class inputModel(BaseModel):
     mileage : float 
     engine : int 
 
-@router.post('/post')
+@router.post('/predict')
 def predict(input:inputModel):
     input_df = pd.DataFrame([input.model_dump()])
     

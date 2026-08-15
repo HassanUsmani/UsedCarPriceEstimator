@@ -24,7 +24,7 @@ def mileage_range(engine: int):
         max = grouped.loc["3000+","max"]
     return {"min":min, "max":max}
             
-@router.get('/vehicle_age/{brandname}/{modelname}')
+@router.get('/model_start_year/{brandname}/{modelname}')
 def veh_age_range(brandname : str, modelname : str):
     related_data = df.loc[(df['brand'] == brandname) & (df['model'] == modelname)]
     if(len(related_data) == 0):
