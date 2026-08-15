@@ -184,7 +184,7 @@ export default {
                             mileage : this.mileage,
                             transmission_type : this.transmission_type
                         }
-                        const response = await fetch("http://localhost:8000/post",{
+                        const response = await fetch("http://localhost:8000/predict",{
                             method : "POST",
                             headers : {
                                 "content-type":"application/json",
@@ -341,7 +341,7 @@ export default {
             this.veh_agereqflag = false
             if(this.brand && this.model){
                 try {
-                    const response = await fetch(`http://localhost:8000/vehicle_age/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+                    const response = await fetch(`http://localhost:8000/model_start_year/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
                 
                     if(!response.ok){
                         throw new Error("Request Failed")
