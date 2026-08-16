@@ -45,9 +45,14 @@ UsedCarPriceEstimator/
 ├── .gitignore
 └── README.md
 ```
+## Live Demo 
+
+- Live frontend: `https://used-car-price-estimator.vercel.app/`
+- Backend API: `https://mhassan.pythonanywhere.com/`
+- Swagger API Docs: `https://mhassan.pythonanywhere.com/docs`
 
 ## Prerequisites 
-- python 3.14.4
+- Python 3.13+
 - Node.js and npm
 - Vue.js
 - Git
@@ -55,6 +60,7 @@ UsedCarPriceEstimator/
 ## Installation & Setup 
 
 ### 1. Clone the repository 
+Open your command prompt
 ```bash
 git clone https://github.com/HassanUsmani/UsedCarPriceEstimator.git
 cd UsedCarPriceEstimator
@@ -69,11 +75,16 @@ Create a virtual environment
 ```bash
 python -m venv .venv
 ```
-Activate the virtual environment
-Windows:
+Activate the virtual environment <br>
+<small>**Windows:**</small>
 ```bash
 .venv\Scripts\activate.bat
 ```
+<small>**macOS / Linux:**</small>
+```bash
+source .venv/bin/activate
+```
+
 Install the backend dependencies
 ```bash
 pip install -r ..\requirements.txt
@@ -109,9 +120,10 @@ The `notebook/main.ipynb` contains all the details of:
 
 The trained model is saved in `model/model.pkl` which is loaded by FastAPI to make predictions.
 
-## API EndPoint 
 
-|   Method   |   Endpont   |   Description   |
+## API Endpoints
+
+|   Method   |   Endpoint   |   Description   |
 | --- | --- | --- |
 |  `GET`  |  `/engine/{brandname}/{modelname}`  |  To get the list of engines from the dataset according to the model  | 
 |  `GET`  |  `/mileage/{engine}`  |  To get the mileage range according to the engine  |
