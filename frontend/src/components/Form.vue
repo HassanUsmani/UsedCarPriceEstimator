@@ -4,7 +4,7 @@
 
         </div>
         <div class="maindiv" :class="{disable : submitted === true}">
-            <h2>Used Car Value Estimator</h2>
+            <h2>Used Car Price Estimator</h2>
             <label>Brand</label>
             <div @click="dropBrand()" class='dropdown-box' :class="{active : dropDownbrand == true}">
                 <div class="selected-item">
