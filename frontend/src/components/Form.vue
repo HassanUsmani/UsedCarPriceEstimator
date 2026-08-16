@@ -95,6 +95,7 @@
 </template>
 
 <script>
+const API_URL = "https://mHassan.pythonanywhere.com";
 export default {
     data(){
         return{
@@ -158,10 +159,12 @@ export default {
             fuels : [],
             transmission : [],
             engine_array :[]
+            
         }
     },
     
     methods :{ 
+        
         async Predict(){
             await this.checkMileage()
             await this.checkVehicle_age()
@@ -184,7 +187,7 @@ export default {
                             mileage : this.mileage,
                             transmission_type : this.transmission_type
                         }
-                        const response = await fetch("http://localhost:8000/predict",{
+                        const response = await fetch(`${API_URL}/predict`,{
                             method : "POST",
                             headers : {
                                 "content-type":"application/json",
@@ -232,7 +235,7 @@ export default {
                 this.dropDownengine = false
             }else{
                 try {
-                const response = await fetch(`http://localhost:8000/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+                const response = await fetch(`${API_URL}/engine/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
                 if(!response.ok){
                     console.log(this.engineLoaded)
                     throw new Error("Request failed")
@@ -257,7 +260,7 @@ export default {
                 this.dropDownFuel = false
             }else{
                 try {
-                    const response = await fetch(`http://localhost:8000/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
+                    const response = await fetch(`${API_URL}/fuel/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
                     if(!response.ok){
                         throw new Error("Request failed")
                     }
@@ -279,7 +282,7 @@ export default {
                 this.dropDownTransmission = false
             }else{
                 try {
-                    const response = await fetch(`http://localhost:8000/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
+                    const response = await fetch(`${API_URL}/trans/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}/${encodeURIComponent(this.engine)}`)
                     if(!response.ok){
                         throw new Error ("Request failed")
                     }
@@ -303,7 +306,7 @@ export default {
             if(this.engine && this.mileage){
                 try {
                     const response = await fetch(
-                        `http://localhost:8000/mileage/${encodeURIComponent(this.engine)}`
+                        `${API_URL}/mileage/${encodeURIComponent(this.engine)}`
                     )
                     if(!response.ok){
                         throw new Error("Request Failed")
@@ -341,7 +344,7 @@ export default {
             this.veh_agereqflag = false
             if(this.brand && this.model){
                 try {
-                    const response = await fetch(`http://localhost:8000/model_start_year/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
+                    const response = await fetch(`${API_URL}/model_start_year/${encodeURIComponent(this.brand)}/${encodeURIComponent(this.model)}`)
                 
                     if(!response.ok){
                         throw new Error("Request Failed")
