@@ -6,7 +6,7 @@ from routers import prediction, validation, vehicle
 app = FastAPI()
 
 
-origin = ['http://localhost:8080']
+origin = ["http://localhost:8080","https://used-car-price-estimator.vercel.app"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins = origin,
