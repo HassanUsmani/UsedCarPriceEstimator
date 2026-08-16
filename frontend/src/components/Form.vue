@@ -175,6 +175,7 @@ export default {
             }
             if (this.brand && this.model && this.engine && this.fuel_type && this.vehicle_age
                 && this.km_driven && this.mileage && this.transmission_type){
+                    this.submitted = true
                     this.loading(true)
                     try {
                         const data = {
@@ -199,7 +200,7 @@ export default {
                         }
                         const result = await response.json()
                         this.sendPrediction(result)
-                        this.submitted = true 
+                         
                         this.loading(false)
                         
                     } 
